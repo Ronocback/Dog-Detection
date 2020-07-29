@@ -1,6 +1,7 @@
 import os
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 from PIL import Image
 from tensorflow import keras
 from keras.models import Sequential
@@ -11,7 +12,7 @@ from sklearn.model_selection import train_test_split
 image_path = 'images/Images/'
 breeds = os.listdir(image_path)
 
-breeds = breeds[:25]
+breeds = breeds[:40]
 
 random_seed = 66
 
@@ -46,7 +47,98 @@ n = np.arange(images.shape[0])
 np.random.seed(random_seed)
 np.random.shuffle(n)
 
+images = images[n]
+labels = labels[n]
+
+images = images.astype(np.float32)
+labels = labels.astype(np.int32)
+images = images/255
+
 print("Images shape = ",images.shape,"\nLabels shape = ",labels.shape)
 
 x_train, x_test, y_train, y_test = train_test_split(images, labels, test_size = 0.2, random_state = random_seed)
 
+model=Sequential()
+
+#1 conv layer
+model.add(Conv2D(filters=96,kernel_size=(11,11),strides=(4,4),padding="valid",activation="relu",input_shape=(227,227,3)))
+
+#1 max pool layer
+model.add(MaxPooling2D(pool_size=(3,3),strides=(2,2)))
+
+model.add(BatchNormalization())
+
+#2 conv layer
+model.add(Conv2D(filters=256,kernel_size=(5,5),strides=(1,1),padding="valid",activation="relu"))
+
+#2 max pool layer
+model.add(MaxPooling2D(pool_size=(3,3),strides=(2,2)))
+
+model.add(BatchNormalization())
+
+#3 conv layer
+model.add(Conv2D(filters=384,kernel_size=(3,3),strides=(1,1),padding="valid",activation="relu"))
+
+#4 conv layer
+model.add(Conv2D(filters=384,kernel_size=(3,3),strides=(1,1),padding="valid",activation="relu"))
+
+#5 conv layer
+model.add(Conv2D(filters=256,kernel_size=(3,3),strides=(1,1),padding="valid",activation="relu"))
+
+#3 max pool layer
+model.add(MaxPooling2D(pool_size=(3,3),strides=(2,2)))
+
+model.add(BatchNormalization())
+
+
+model.add(Flatten())
+
+#1 dense layer
+model.add(Dense(4096,input_shape=(227,227,3),activation="relu"))
+
+model.add(Dropout(0.4))
+
+model.add(BatchNormalization())
+
+#2 dense layer
+model.add(Dense(4096,activation="relu"))
+
+model.add(Dropout(0.4))
+
+model.add(BatchNormalization())
+
+#3 dense layer
+model.add(Dense(1000,activation="relu"))
+
+model.add(Dropout(0.4))
+
+model.add(BatchNormalization())
+
+#output layer
+model.add(Dense(num_labels,activation="softmax"))
+
+model.summary()
+
+model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
+
+model.fit(x_train, y_train, epochs=100)
+
+loss, accuracy = model.evaluate(x_test, y_test)
+
+pred = model.predict(x_test)
+
+plt.figure(1 , figsize = (19 , 10))
+n = 0 
+
+for i in range(9):
+    n += 1 
+    r = np.random.randint( 0, x_test.shape[0], 1)
+    
+    plt.subplot(3, 3, n)
+    plt.subplots_adjust(hspace = 0.3, wspace = 0.3)
+    
+    plt.imshow(x_test[r[0]])
+    plt.title('Actual = {}, Predicted = {}'.format(y_test[r[0]] , y_test[r[0]]*pred[r[0]][y_test[r[0]]]) )
+    plt.xticks([]) , plt.yticks([])
+
+plt.show()
