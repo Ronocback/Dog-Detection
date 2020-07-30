@@ -4,15 +4,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 from tensorflow import keras
-from keras.models import Sequential
+from keras.models import Sequential, load_model
 from keras.layers import Conv2D,MaxPooling2D,Dense,Flatten,Dropout
 from keras.layers.normalization import BatchNormalization
+from keras.callbacks import EarlyStopping, ModelCheckpoint
 from sklearn.model_selection import train_test_split
+
 
 image_path = 'images/Images/'
 breeds = os.listdir(image_path)
 
-breeds = breeds[:40]
+breeds = breeds[:20]
 
 random_seed = 66
 
@@ -121,7 +123,13 @@ model.summary()
 
 model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
 
-model.fit(x_train, y_train, epochs=100)
+cb = [
+    ModelCheckpoint(filepath='best_model.h5', monitor='accuracy', save_best_only=True)
+]
+
+model.fit(x_train, y_train, epochs=100, callbacks=cb)
+
+model = load_model('best_model.h5')
 
 loss, accuracy = model.evaluate(x_test, y_test)
 
