@@ -1,5 +1,6 @@
 import os
 import cv2
+import random
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -14,7 +15,7 @@ from sklearn.model_selection import train_test_split
 image_path = 'images/Images/'
 breeds = os.listdir(image_path)
 
-breeds = breeds[:20]
+breeds = random.sample(breeds, 2)
 
 random_seed = 66
 
@@ -146,7 +147,11 @@ for i in range(9):
     plt.subplots_adjust(hspace = 0.3, wspace = 0.3)
     
     plt.imshow(x_test[r[0]])
-    plt.title('Actual = {}, Predicted = {}'.format(y_test[r[0]] , y_test[r[0]]*pred[r[0]][y_test[r[0]]]) )
+
+    dec_act = round(y_test[r[0]], 3)
+    dec_pred = round(y_test[r[0]]*pred[r[0]][y_test[r[0]]], 3)
+
+    plt.title('Actual = {} {}, Predicted = {} {}'.format(dec_act , breeds[int(round(dec_act))].split('-')[1], dec_pred, breeds[int(round(dec_pred))].split('-')[1]))
     plt.xticks([]) , plt.yticks([])
 
 plt.show()
